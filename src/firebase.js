@@ -157,40 +157,24 @@ MockFirebase.prototype.child = function (childPath) {
 MockFirebase.prototype.set = function (data, callback) {
   var err = this._nextErr('set');
   data = _.cloneDeep(data);
-  var self = this;
-  return new rsvp.Promise(function(resolve, reject) {
-    self._defer('set', _.toArray(arguments), function() {
-      if (err === null) {
-        self._dataChanged(data);
-        resolve(data);
-      } else {
-        if (callback) {
-          callback(err);
-        }
-        reject(err);
-      }
-    });
+  this._defer('set', _.toArray(arguments), function() {
+    if (err === null) {
+      this._dataChanged(data);
+    }
+    if (callback) callback(err);
   });
 };
 
 MockFirebase.prototype.update = function (changes, callback) {
   assert.equal(typeof changes, 'object', 'First argument must be an object when calling "update"');
   var err = this._nextErr('update');
-  var self = this;
-  return new rsvp.Promise(function(resolve, reject) {
-    self._defer('update', _.toArray(arguments), function () {
-      if (!err) {
-        var base = self.getData();
-        var data = _.assign(_.isObject(base) ? base : {}, changes);
-        self._dataChanged(data);
-        resolve(data);
-      } else {
-        if (callback) {
-          callback(err);
-        }
-        reject(err);
-      }
-    });
+  this._defer('update', _.toArray(arguments), function () {
+    if (!err) {
+      var base = this.getData();
+      var data = _.assign(_.isObject(base) ? base : {}, changes);
+      this._dataChanged(data);
+    }
+    if (callback) callback(err);
   });
 };
 
@@ -243,28 +227,25 @@ MockFirebase.prototype.once = function (event, callback, cancel, context) {
     cancel = _.noop;
   }
   cancel = cancel || _.noop;
+  callback = callback || _.noop;
   var self = this;
-  return new rsvp.Promise(function(resolve, reject) {
-    var err = self._nextErr('once');
-    if (err) {
-      self._defer('once', _.toArray(arguments), function () {
-        if (cancel) {
-          cancel.call(context, err);
-        }
-        reject(err);
-      });
-    }
-    else {
-      var fn = _.bind(function (snapshot) {
-        self.off(event, fn, context);
-        if (callback) {
-          callback.call(context, snapshot);
-        }
-        resolve(snapshot);
-      }, self);
-      self._on('once', event, fn, cancel, context);
-    }
+  var err = this._nextErr('once');
+  var promise = new rsvp.Promise(function(resolve, reject) {
+      if (err) {
+          self._defer('once', _.toArray(arguments), function () {
+              cancel.call(context, err);
+              reject();
+          });
+      } else {
+          var fn = _.bind(function (snapshot) {
+              self.off(event, fn, context);
+              callback.call(context, snapshot);
+              resolve(snapshot);
+          }, self);
+          self._on('once', event, fn, cancel, context);
+      }
   });
+  return promise;
 };
 
 MockFirebase.prototype.remove = function (callback) {
@@ -337,40 +318,12 @@ MockFirebase.prototype.transaction = function (valueFn, finishedFn, applyLocally
   return [valueFn, finishedFn, applyLocally];
 };
 
-/**
+MockFirebase.prototype./**
  * Just a stub at this point.
  * @param {int} limit
  */
-MockFirebase.prototype.limit = function (limit) {
+limit = function (limit) {
   return new Query(this).limit(limit);
-};
-
-/**
- * Just a stub so it can be spied on during testing
- */
-MockFirebase.prototype.orderByChild = function (child) {
-  return new Query(this);
-};
-
-/**
- * Just a stub so it can be spied on during testing
- */
-MockFirebase.prototype.orderByKey = function (key) {
- return new Query(this);
-};
-
-/**
- * Just a stub so it can be spied on during testing
- */
-MockFirebase.prototype.orderByPriority = function (property) {
- return new Query(this);
-};
-
-/**
- * Just a stub so it can be spied on during testing
- */
-MockFirebase.prototype.orderByValue = function (value) {
- return new Query(this);
 };
 
 MockFirebase.prototype.startAt = function (priority, key) {

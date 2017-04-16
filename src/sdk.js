@@ -1,47 +1,46 @@
 var MockFirebase = require('./firebase');
 
-function MockFirebaseSdk(createDatabase, createAuth) {
-  function MockFirebaseAuth() {
-    var auth = createAuth ? createAuth() : new MockFirebase();
-    delete auth.ref;
-    return auth;
+var auth;
+function MockFirebaseAuth() {
+  if (!auth) {
+      auth = new MockFirebase();
+      delete auth.ref;
   }
-  MockFirebaseAuth.GoogleAuthProvider = function() {
-    this.providerId = "google.com";
-  };
-  MockFirebaseAuth.TwitterAuthProvider = function() {
-    this.providerId = "twitter.com";
-  };
-  MockFirebaseAuth.FacebookAuthProvider = function() {
-    this.providerId = "facebook.com";
-  };
-  MockFirebaseAuth.GithubAuthProvider = function() {
-    this.providerId = "github.com";
-  };
+  return auth;
+}
+MockFirebaseAuth.GoogleAuthProvider = function() {
+  this.providerId = "google.com";
+};
+MockFirebaseAuth.TwitterAuthProvider = function() {
+  this.providerId = "twitter.com";
+};
+MockFirebaseAuth.FacebookAuthProvider = function() {
+  this.providerId = "facebook.com";
+};
+MockFirebaseAuth.GithubAuthProvider = function() {
+  this.providerId = "github.com";
+};
 
-  function MockFirebaseDatabase() {
-    return {
-      ref: function(path) {
-        return createDatabase ? createDatabase(path) : new MockFirebase(path);
-      },
-      refFromURL: function(url) {
-        return createDatabase ? createDatabase(url) : new MockFirebase(url);
-      }
-    };
-  }
-
+function MockFirebaseDatabase() {
   return {
-    database: MockFirebaseDatabase,
-    auth: MockFirebaseAuth,
-    initializeApp: function() {
-      return {
-        database: MockFirebaseDatabase,
-        auth: MockFirebaseAuth,
-        messaging: function() {},
-        storage: function() {}
-      };
+    ref: function(path) {
+      return new MockFirebase(path);
+    },
+    refFromURL: function(url) {
+      return new MockFirebase(url);
     }
   };
 }
 
-module.exports = MockFirebaseSdk;
+module.exports = {
+  database: MockFirebaseDatabase,
+  auth: MockFirebaseAuth,
+  initializeApp: function() {
+    return {
+      database: MockFirebaseDatabase,
+      auth: MockFirebaseAuth,
+      messaging: function() {},
+      storage: function() {}
+    };
+  }
+};
