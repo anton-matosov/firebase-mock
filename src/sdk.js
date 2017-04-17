@@ -17,30 +17,54 @@ class MockFirebaseDatabase {
   }
 }
 
+class MockFirebaseAuth extends MockFirebase {
+
+  constructor() {
+    super(...arguments);
+
+    delete this.ref;
+  }
+
+  GoogleAuthProvider() {
+    this.providerId = "google.com";
+  }
+
+  TwitterAuthProvider() {
+    this.providerId = "twitter.com";
+  }
+
+  FacebookAuthProvider() {
+    this.providerId = "facebook.com";
+  }
+
+  GithubAuthProvider() {
+    this.providerId = "github.com";
+  }
+}
+
 class MockFirebaseApp {
   name;
-  database;
-  auth;
-  messaging;
-  storage;
+
+  database() {
+    return this._db;
+  }
+
+  auth() {
+    return this._auth;
+  }
+
+  messaging() {
+    return this._messaging;
+  }
+  
+  storage() {
+    return this._storage;
+  }
 
   constructor(name) {
     this.name = name;
-    var db = new MockFirebaseDatabase();
-    this.database = () => {
-      return db;
-    };
-
-    var auth = new MockFirebase();
-    this.auth = () => {
-      return auth;
-    };
-
-    this.messaging = () => {
-    };
-    
-    this.storage = () => {
-    };
+    this._db = new MockFirebaseDatabase();
+    this._auth = new MockFirebaseAuth();
   }
 }
 
@@ -74,46 +98,6 @@ class MockFirebaseSdk {
     this._apps[app.name] = app;
     return app;
   }
-
-
-  // function MockFirebaseAuth() {
-  //   if (!auth) {
-  //     auth = createAuth ? createAuth() : new MockFirebase();
-  //     delete auth.ref;
-  //   }
-  //   return auth;
-  // }
-  // MockFirebaseAuth.GoogleAuthProvider = function() {
-  //   this.providerId = "google.com";
-  // };
-  // MockFirebaseAuth.TwitterAuthProvider = function() {
-  //   this.providerId = "twitter.com";
-  // };
-  // MockFirebaseAuth.FacebookAuthProvider = function() {
-  //   this.providerId = "facebook.com";
-  // };
-  // MockFirebaseAuth.GithubAuthProvider = function() {
-  //   this.providerId = "github.com";
-  // };
-  //
-  // function MockFirebaseDatabase() {
-  //   return {
-  //     ref: function(path) {
-  //       return createDatabase ? createDatabase(path) : new MockFirebase(path);
-  //     },
-  //     refFromURL: function(url) {
-  //       return createDatabase ? createDatabase(url) : new MockFirebase(url);
-  //     }
-  //   };
-  // }
-  //
-  // return {
-  //   database: MockFirebaseDatabase,
-  //   auth: MockFirebaseAuth,
-  //   initializeApp: function(appKey, appSecret, appName) {
-  //     return new MockFirebaseApp(appName ?: "[DEFAULT]");
-  //   }
-  // };
 }
 
 module.exports = MockFirebaseSdk;
